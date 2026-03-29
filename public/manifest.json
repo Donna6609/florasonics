@@ -1,0 +1,95 @@
+{
+  "name": "FloraSonics - Nature Soundscapes",
+  "short_name": "FloraSonics",
+  "description": "Immersive nature soundscapes for focus, relaxation, and meditation",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "theme_color": "#1c1917",
+  "background_color": "#f5f5f4",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-maskable-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icon-maskable-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshot-540x720.png",
+      "sizes": "540x720",
+      "type": "image/png",
+      "form_factor": "narrow"
+    },
+    {
+      "src": "/screenshot-1280x720.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide"
+    }
+  ],
+  "categories": ["lifestyle", "wellness"],
+  "prefer_related_applications": false,
+  "shortcuts": [
+    {
+      "name": "Start Meditation",
+      "short_name": "Meditate",
+      "description": "Begin a guided meditation session",
+      "url": "/?shortcut=meditation",
+      "icons": [
+        {
+          "src": "/icon-meditation-96x96.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Breathing Exercise",
+      "short_name": "Breathe",
+      "description": "Guided breathing exercise",
+      "url": "/?shortcut=breathing",
+      "icons": [
+        {
+          "src": "/icon-breathing-96x96.png",
+          "sizes": "96x96"
+        }
+      ]
+    }
+  ],
+  "share_target": {
+    "action": "/share",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url",
+      "files": [
+        {
+          "name": "preset",
+          "accept": ["application/json", ".json"]
+        }
+      ]
+    }
+  }
+}

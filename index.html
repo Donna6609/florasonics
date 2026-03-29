@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="https://base44.com/logo_v2.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#1c1917" />
+    <meta name="description" content="FloraSonics - Immersive nature soundscapes for focus, relaxation, and meditation" />
+    <title>FloraSonics</title>
+    <!-- CRITICAL: Inline theme detection before CSS parser finishes (blocks render) to prevent layout shift -->
+    <!-- This executes before body paint, eliminating FOUC (Flash of Unstyled Content) -->
+    <script>
+      (function() {
+        // Detect system theme preference
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        
+        // Set class immediately on root element before CSS applies
+        // Using setAttribute instead of classList to ensure immediate synchronous update
+        if (prefersDark) {
+          document.documentElement.setAttribute('class', 'dark');
+        } else {
+          // Explicitly remove class if light theme (guards against cached dark class)
+          document.documentElement.removeAttribute('class');
+        }
+        
+        // Trigger repaint of any already-processed styles (unlikely but safe)
+        // This ensures the class is applied before first paint
+        document.documentElement.offsetHeight;
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+
+  </body>
+</html>

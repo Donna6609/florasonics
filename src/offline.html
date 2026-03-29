@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0f172a" />
+  <meta name="color-scheme" content="dark" />
+  <title>Offline — FloraSonics</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #1a1a2e 100%);
+      color: #f0f0f0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      overscroll-behavior: none;
+    }
+
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    }
+
+    .container {
+      width: 100%;
+      max-width: 500px;
+      padding: 2rem;
+      text-align: center;
+      animation: fadeIn 0.6s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .logo-container {
+      margin-bottom: 2rem;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 0.7;
+      }
+      50% {
+        opacity: 1;
+      }
+    }
+
+    .logo-icon {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto 1rem;
+      opacity: 0.8;
+      filter: drop-shadow(0 0 8px rgba(34, 197, 94, 0.2));
+    }
+
+    h1 {
+      font-size: 1.875rem;
+      font-weight: 300;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.5rem;
+      background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      margin-bottom: 1.5rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: #fed7aa;
+      background: rgba(245, 158, 11, 0.1);
+      border: 1px solid rgba(245, 158, 94, 0.2);
+      border-radius: 0.5rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .status::before {
+      content: "";
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #fbbf24;
+      box-shadow: 0 0 8px rgba(251, 191, 36, 0.4);
+    }
+
+    .description {
+      font-size: 1rem;
+      line-height: 1.6;
+      color: rgba(255, 255, 255, 0.65);
+      margin-bottom: 2rem;
+    }
+
+    .offline-message {
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+      background: linear-gradient(135deg, rgba(15, 23, 42, 0.8) 0%, rgba(30, 27, 75, 0.8) 100%);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 1rem;
+      backdrop-filter: blur(12px);
+    }
+
+    .offline-message p {
+      color: rgba(255, 255, 255, 0.7);
+      margin: 0.5rem 0;
+      font-size: 0.95rem;
+    }
+
+    .offline-message strong {
+      color: rgba(255, 255, 255, 0.9);
+      font-weight: 500;
+    }
+
+    .tips {
+      text-align: left;
+      margin-bottom: 2rem;
+      padding: 1.5rem;
+      background: rgba(16, 185, 129, 0.05);
+      border-left: 3px solid rgba(16, 185, 129, 0.3);
+      border-radius: 0.5rem;
+    }
+
+    .tips h3 {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: rgba(16, 185, 129, 0.9);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      margin-bottom: 0.75rem;
+    }
+
+    .tips ul {
+      list-style: none;
+      font-size: 0.875rem;
+      color: rgba(255, 255, 255, 0.6);
+      line-height: 1.8;
+    }
+
+    .tips li::before {
+      content: "✓ ";
+      color: rgba(16, 185, 129, 0.7);
+      font-weight: 600;
+      margin-right: 0.5rem;
+    }
+
+    .actions {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .button {
+      padding: 0.75rem 1.5rem;
+      min-height: 44px;
+      font-size: 1rem;
+      font-weight: 500;
+      border: none;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+    }
+
+    .button-primary {
+      background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+      color: white;
+      box-shadow: 0 8px 16px rgba(99, 102, 241, 0.3);
+    }
+
+    .button-primary:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 24px rgba(99, 102, 241, 0.4);
+    }
+
+    .button-primary:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    .button-secondary {
+      background: rgba(255, 255, 255, 0.08);
+      color: rgba(255, 255, 255, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+
+    .button-secondary:hover:not(:disabled) {
+      background: rgba(255, 255, 255, 0.12);
+      color: rgba(255, 255, 255, 0.95);
+    }
+
+    .button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .footer {
+      margin-top: 3rem;
+      padding-top: 2rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      font-size: 0.75rem;
+      color: rgba(255, 255, 255, 0.4);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .footer-link {
+      color: rgba(255, 255, 255, 0.6);
+      text-decoration: none;
+      transition: color 0.2s ease;
+    }
+
+    .footer-link:hover {
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    @media (max-width: 480px) {
+      h1 {
+        font-size: 1.5rem;
+      }
+
+      .description {
+        font-size: 0.95rem;
+      }
+
+      .tips {
+        padding: 1rem;
+      }
+
+      .button {
+        padding: 0.625rem 1rem;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .container,
+      .logo-container {
+        animation: none;
+      }
+
+      .logo-container {
+        opacity: 0.9;
+      }
+
+      .button:hover:not(:disabled) {
+        transform: none;
+      }
+    }
+
+    /* High contrast mode */
+    @media (prefers-contrast: more) {
+      h1 {
+        font-weight: 500;
+      }
+
+      .button {
+        border-width: 2px;
+      }
+
+      .status {
+        border-width: 2px;
+      }
+    }
+
+    /* Dark mode support (already dark by default) */
+    @media (prefers-color-scheme: light) {
+      html, body {
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 50%, #ede9fe 100%);
+        color: #1e293b;
+      }
+
+      h1 {
+        background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+        -webkit-text-fill-color: unset;
+        background-clip: unset;
+      }
+
+      .description {
+        color: rgba(30, 41, 59, 0.65);
+      }
+
+      .status {
+        color: #b45309;
+        background: rgba(245, 158, 11, 0.1);
+        border-color: rgba(245, 158, 94, 0.2);
+      }
+
+      .offline-message {
+        background: linear-gradient(135deg, rgba(248, 250, 252, 0.8) 0%, rgba(241, 245, 249, 0.8) 100%);
+        border-color: rgba(30, 41, 59, 0.08);
+      }
+
+      .offline-message p,
+      .offline-message strong {
+        color: #475569;
+      }
+
+      .button-secondary {
+        background: rgba(30, 41, 59, 0.06);
+        color: rgba(30, 41, 59, 0.8);
+        border-color: rgba(30, 41, 59, 0.12);
+      }
+
+      .button-secondary:hover:not(:disabled) {
+        background: rgba(30, 41, 59, 0.12);
+        color: #1e293b;
+      }
+
+      .footer {
+        border-top-color: rgba(30, 41, 59, 0.08);
+        color: rgba(30, 41, 59, 0.4);
+      }
+
+      .footer-link {
+        color: rgba(30, 41, 59, 0.6);
+      }
+
+      .footer-link:hover {
+        color: #1e293b;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Logo/Icon -->
+    <div class="logo-container">
+      <svg class="logo-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z" fill="currentColor" opacity="0.8"/>
+      </svg>
+    </div>
+
+    <!-- Status Badge -->
+    <div class="status">Offline Mode</div>
+
+    <!-- Heading -->
+    <h1>No Connection</h1>
+
+    <!-- Description -->
+    <p class="description">FloraSonics requires an internet connection to stream sounds and access all features.</p>
+
+    <!-- Offline Message -->
+    <div class="offline-message">
+      <p><strong>What you can still do:</strong></p>
+      <p>✓ Play downloaded soundscapes offline</p>
+      <p>✓ Access your mood logs and activity history</p>
+      <p>✓ Review saved presets and wellness content</p>
+    </div>
+
+    <!-- Tips -->
+    <div class="tips">
+      <h3>Try These Steps</h3>
+      <ul>
+        <li>Check your Wi-Fi or cellular connection</li>
+        <li>Move closer to your Wi-Fi router</li>
+        <li>Airplane mode is off (turn off if needed)</li>
+        <li>Restart your device if the problem persists</li>
+      </ul>
+    </div>
+
+    <!-- Actions -->
+    <div class="actions">
+      <button class="button button-primary" onclick="location.reload()">
+        Try Again
+      </button>
+      <button class="button button-secondary" onclick="goOfflineMode()">
+        Continue Offline
+      </button>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <p>FloraSonics v1.0 | <a class="footer-link" href="https://florasonicss.com/privacy">Privacy Policy</a></p>
+    </div>
+  </div>
+
+  <script>
+    function goOfflineMode() {
+      // Store offline mode preference
+      localStorage.setItem('offlineModeManual', 'true');
+      // Attempt to go to home or reload (app will detect offline in service worker)
+      setTimeout(() => location.href = '/', 100);
+    }
+
+    // Auto-check connection and reload when back online
+    window.addEventListener('online', () => {
+      // Small delay to ensure network is stable
+      setTimeout(() => location.reload(), 1000);
+    });
+
+    // Prevent multiple rapid reloads
+    let lastReloadTime = 0;
+    document.querySelector('.button-primary').addEventListener('click', (e) => {
+      const now = Date.now();
+      if (now - lastReloadTime < 2000) {
+        e.preventDefault();
+        return;
+      }
+      lastReloadTime = now;
+    });
+  </script>
+</body>
+</html>
