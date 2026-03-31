@@ -15,7 +15,7 @@ workflows:
         BUNDLE_ID: "com.florasonics.app"
         APP_STORE_APPLE_ID: "6761284963"
       node: 18.17.0
-      xcode: latest
+      xcode: 16.2
       cocoapods: default
 
     scripts:
@@ -51,7 +51,7 @@ workflows:
 
       - name: Set build number
         script: |
-          BUILD_NUMBER=$(app-store-connect get-latest-app-store-build-number "$APP_STORE_APPLE_ID" --pre-release-version 1.0.0 2>/dev/null || echo "0")
+          BUILD_NUMBER=$(app-store-connect get-latest-app-store-build-number "$APP_STORE_APPLE_ID" 2>/dev/null || echo "0")
           agvtool new-version -all $((BUILD_NUMBER + 1))
         working_directory: ios/App
 
@@ -69,6 +69,5 @@ workflows:
     publishing:
       app_store_connect:
         auth: integration
-        submit_to_testflight: false
-        submit_to_app_store: true
-        release_type: AFTER_APPROVAL
+        submit_to_testflight: true
+        submit_to_app_store: false
