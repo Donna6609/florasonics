@@ -42,13 +42,21 @@ workflows:
           fi
 
       - name: Sync Capacitor
-        script: npx cap sync ios
+        script: |
+          npx cap sync ios
+          ls -la ios/App || echo "ios/App directory not found"
+          ls -la ios/App/Podfile || echo "Podfile not found"
 
       - name: Install CocoaPods
         script: |
-          pod repo update
-          cd ios/App
-          pod install
+          if [ -f "ios/App/Podfile" ]; then
+            pod repo update
+            cd ios/App
+            pod install
+          else
+            echo "Error: Podfile not found in ios/App"
+            exit 1
+          fi
 
       - name: Set build number
         script: |
