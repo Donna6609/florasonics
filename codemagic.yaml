@@ -10,9 +10,9 @@ workflows:
     environment:
       ios_signing:
         distribution_type: app_store
-        bundle_identifier: com.florasonics.app
+        bundle_identifier: com.base698ab9ae938dc61b1a405bd7.app
       vars:
-        BUNDLE_ID: "com.florasonics.app"
+        BUNDLE_ID: "com.base698ab9ae938dc61b1a405bd7.app"
         APP_STORE_APPLE_ID: "6761284963"
       node: 18.17.0
       xcode: 16.2
@@ -70,4 +70,3 @@ workflows:
       app_store_connect:
         auth: integration
         submit_to_testflight: true
-        submit_to_app_store: false
