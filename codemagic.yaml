@@ -34,11 +34,13 @@ workflows:
           rm -rf ios
           npx cap add ios
           npx cap sync ios
+          echo "--- Listing ios/App directory ---"
+          ls ios/App/
 
       - name: Resolve Swift Package Manager dependencies
         script: |
           xcodebuild -resolvePackageDependencies \
-            -workspace ios/App/App.xcworkspace \
+            -project ios/App/App.xcodeproj \
             -scheme App
 
       - name: Set build number
@@ -50,7 +52,7 @@ workflows:
       - name: Build iOS
         script: |
           xcode-project build-ipa \
-            --workspace "ios/App/App.xcworkspace" \
+            --project "ios/App/App.xcodeproj" \
             --scheme "App" \
             --config "Release"
 
