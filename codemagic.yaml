@@ -10,13 +10,13 @@ workflows:
     environment:
       ios_signing:
         distribution_type: app_store
-        bundle_identifier: com.base698ab9ae938dc61b1a405bd7.app
+        bundle_identifier: com.florasonics.app
       vars:
-        BUNDLE_ID: "com.base698ab9ae938dc61b1a405bd7.app"
+        BUNDLE_ID: "com.florasonics.app"
         APP_STORE_APPLE_ID: "6761284963"
-      node: 22.0.0
+      node: 18.17.0
       xcode: 16.2
-      cocoapods: default
+      cocoapods: 1.15.2
 
     scripts:
       - name: Install dependencies
@@ -29,34 +29,21 @@ workflows:
         script: |
           npm install @capacitor/core @capacitor/cli @capacitor/ios
 
-      - name: Init Capacitor (if not already initialized)
+      - name: Add iOS platform, sync and install pods
         script: |
-          if [ ! -f "capacitor.config.ts" ] && [ ! -f "capacitor.config.json" ]; then
-            npx cap init FloraSonics $BUNDLE_ID --web-dir=dist
-          fi
-
-      - name: Add iOS platform (if not already added)
-        script: |
-          if [ ! -d "ios" ]; then
-            npx cap add ios
-          fi
-
-      - name: Sync Capacitor
-        script: |
+          set -e
+          rm -rf ios
+          echo "--- capacitor.config.ts contents ---"
+          cat capacitor.config.ts
+          echo "--- running cap add ios ---"
+          npx cap add ios
+          echo "--- running cap sync ios ---"
           npx cap sync ios
-          ls -la ios/App || echo "ios/App directory not found"
-          ls -la ios/App/Podfile || echo "Podfile not found"
-
-      - name: Install CocoaPods
-        script: |
-          if [ -f "ios/App/Podfile" ]; then
-            pod repo update
-            cd ios/App
-            pod install
-          else
-            echo "Error: Podfile not found in ios/App"
-            exit 1
-          fi
+          echo "--- checking ios/App directory ---"
+          ls -la ios/App/
+          echo "--- installing CocoaPods ---"
+          cd ios/App
+          pod install --repo-update
 
       - name: Set build number
         script: |
@@ -79,3 +66,4 @@ workflows:
       app_store_connect:
         auth: integration
         submit_to_testflight: true
+        submit_to_app_store: false
