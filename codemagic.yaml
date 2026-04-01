@@ -33,15 +33,8 @@ workflows:
         script: |
           set -e
           rm -rf ios
-          echo "--- capacitor.config.ts contents ---"
-          cat capacitor.config.ts
-          echo "--- running cap add ios ---"
           npx cap add ios
-          echo "--- running cap sync ios ---"
           npx cap sync ios
-          echo "--- checking ios/App directory ---"
-          ls -la ios/App/
-          echo "--- installing CocoaPods ---"
           cd ios/App
           pod install --repo-update
 
