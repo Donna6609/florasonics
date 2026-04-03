@@ -9,10 +9,8 @@ workflows:
 
     environment:
       ios_signing:
-        provisioning_profiles:
-          - FloraSonics
-        certificates:
-          - FloraSonics App store
+        distribution_type: app_store
+        bundle_identifier: com.florasonics.app
       vars:
         BUNDLE_ID: "com.florasonics.app"
         APP_STORE_APPLE_ID: "6761284963"
@@ -74,11 +72,8 @@ workflows:
             <false/>
             <key>uploadSymbols</key>
             <true/>
-            <key>provisioningProfiles</key>
-            <dict>
-              <key>com.florasonics.app</key>
-              <string>FloraSonics</string>
-            </dict>
+            <key>signingStyle</key>
+            <string>automatic</string>
           </dict>
           </plist>
           EOF
@@ -95,10 +90,8 @@ workflows:
             -scheme "App" \
             -configuration "Release" \
             -archivePath "$ARCHIVE_PATH" \
-            CODE_SIGN_STYLE=Manual \
+            CODE_SIGN_STYLE=Automatic \
             DEVELOPMENT_TEAM=4CYS3PZNWH \
-            CODE_SIGN_IDENTITY="Apple Distribution" \
-            PROVISIONING_PROFILE_SPECIFIER="FloraSonics" \
             COMPILER_INDEX_STORE_ENABLE=NO
 
           xcodebuild -exportArchive \
