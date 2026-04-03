@@ -18,7 +18,6 @@ workflows:
         APP_STORE_APPLE_ID: "6761284963"
       node: 22.0.0
       xcode: 16.2
-      cocoapods: 1.15.2
 
     scripts:
       - name: Print Node version
@@ -52,9 +51,7 @@ workflows:
           npx cap sync ios
           echo "--- checking ios/App directory ---"
           ls -la ios/App/
-          echo "--- installing CocoaPods ---"
-          cd ios/App
-          pod install --repo-update
+          echo "--- iOS platform ready (SPM, no CocoaPods needed) ---"
 
       - name: Set build number
         script: |
