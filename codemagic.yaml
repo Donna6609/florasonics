@@ -81,12 +81,11 @@ workflows:
 
     environment:
       android_signing:
-        - keystore_reference: florasonics_keystore
+        - keystore: florasonics_keystore
       vars:
         PACKAGE_NAME: "com.florasonics.app"
       node: 18.17.0
       java: 17
-      gradle: 7.6
 
     scripts:
       - name: Install dependencies
