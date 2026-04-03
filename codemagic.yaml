@@ -69,7 +69,7 @@ workflows:
             <key>method</key>
             <string>app-store</string>
             <key>teamID</key>
-            <string>$APPLE_TEAM_ID</string>
+            <string>4CYS3PZNWH</string>
             <key>uploadBitcode</key>
             <false/>
             <key>uploadSymbols</key>
