@@ -21,6 +21,12 @@ workflows:
       cocoapods: 1.15.2
 
     scripts:
+      - name: Use Node 22
+        script: |
+          nvm install 22
+          nvm use 22
+          node --version
+
       - name: Install dependencies
         script: npm install
 
@@ -90,6 +96,12 @@ workflows:
       java: 17
 
     scripts:
+      - name: Use Node 22
+        script: |
+          nvm install 22
+          nvm use 22
+          node --version
+
       - name: Install dependencies
         script: npm install
 
