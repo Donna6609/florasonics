@@ -11,6 +11,7 @@ workflows:
       vars:
         BUNDLE_ID: "com.florasonics.app"
         APP_STORE_APPLE_ID: "6761284963"
+        CERTIFICATE_PRIVATE_KEY: $CERTIFICATE_PRIVATE_KEY
       node: 22.0.0
       xcode: 16.2
 
@@ -59,7 +60,9 @@ workflows:
           keychain initialize
           app-store-connect fetch-signing-files "$BUNDLE_ID" \
             --type IOS_APP_STORE \
-            --create
+            --create \
+            --certificate-key "$CERTIFICATE_PRIVATE_KEY" \
+            --certificate-type IOS_DISTRIBUTION
           keychain add-certificates
 
       - name: Build iOS
