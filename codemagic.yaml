@@ -8,9 +8,6 @@ workflows:
       app_store_connect: FloraSonics Codemagic
 
     environment:
-      ios_signing:
-        distribution_type: app_store
-        bundle_identifier: com.florasonics.app
       vars:
         BUNDLE_ID: "com.florasonics.app"
         APP_STORE_APPLE_ID: "6761284963"
@@ -57,52 +54,26 @@ workflows:
           agvtool new-version -all $((BUILD_NUMBER + 1))
         working_directory: ios/App
 
-      - name: Create export options plist
+      - name: Fetch and apply provisioning profiles
         script: |
-          cat > /Users/builder/export_options.plist << 'EOF'
-          <?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0">
-          <dict>
-            <key>method</key>
-            <string>app-store</string>
-            <key>teamID</key>
-            <string>4CYS3PZNWH</string>
-            <key>uploadBitcode</key>
-            <false/>
-            <key>uploadSymbols</key>
-            <true/>
-            <key>signingStyle</key>
-            <string>automatic</string>
-          </dict>
-          </plist>
-          EOF
+          app-store-connect fetch-signing-files "$BUNDLE_ID" \
+            --type IOS_APP_STORE \
+            --create
+          keychain initialize
+          keychain add-certificates
+          xcode-project use-profiles
 
       - name: Build iOS
         script: |
           set -e
-          ARCHIVE_PATH="/Users/builder/clone/build/ios/xcarchive/App.xcarchive"
-          IPA_DIR="/Users/builder/clone/build/ios/ipa"
-          mkdir -p "$IPA_DIR"
-
-          xcodebuild archive \
-            -project "ios/App/App.xcodeproj" \
-            -scheme "App" \
-            -configuration "Release" \
-            -archivePath "$ARCHIVE_PATH" \
-            CODE_SIGN_STYLE=Automatic \
-            DEVELOPMENT_TEAM=4CYS3PZNWH \
-            COMPILER_INDEX_STORE_ENABLE=NO
-
-          xcodebuild -exportArchive \
-            -archivePath "$ARCHIVE_PATH" \
-            -exportPath "$IPA_DIR" \
-            -exportOptionsPlist /Users/builder/export_options.plist
+          xcode-project build-ipa \
+            --project "ios/App/App.xcodeproj" \
+            --scheme "App" \
+            --archive-xcargs "COMPILER_INDEX_STORE_ENABLE=NO"
 
     artifacts:
       - build/ios/ipa/*.ipa
       - build/ios/xcarchive/*.xcarchive
-      - /tmp/xcodebuild_logs/*.log
 
     publishing:
       app_store_connect:
