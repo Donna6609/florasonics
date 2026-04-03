@@ -56,11 +56,12 @@ workflows:
 
       - name: Fetch signing files and set up keychain
         script: |
+          keychain initialize
           app-store-connect fetch-signing-files "$BUNDLE_ID" \
             --type IOS_APP_STORE \
             --create
-          keychain initialize
           keychain add-certificates
+          xcode-project use-profiles
 
       - name: Build iOS
         script: |
@@ -68,7 +69,7 @@ workflows:
           xcode-project build-ipa \
             --project "ios/App/App.xcodeproj" \
             --scheme "App" \
-            --archive-xcargs "COMPILER_INDEX_STORE_ENABLE=NO CODE_SIGN_STYLE=Automatic DEVELOPMENT_TEAM=4CYS3PZNWH"
+            --archive-xcargs "COMPILER_INDEX_STORE_ENABLE=NO"
 
     artifacts:
       - build/ios/ipa/*.ipa
