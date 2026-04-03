@@ -9,7 +9,7 @@ workflows:
 
     environment:
       ios_signing:
-        distribution_type: APP_STORE
+        distribution_type: app_store
         bundle_identifier: com.florasonics.app
       vars:
         BUNDLE_ID: "com.florasonics.app"
