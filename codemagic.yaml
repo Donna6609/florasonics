@@ -59,12 +59,37 @@ workflows:
           agvtool new-version -all $((BUILD_NUMBER + 1))
         working_directory: ios/App
 
+      - name: Create export options plist
+        script: |
+          cat > /Users/builder/export_options.plist << 'EOF'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key>
+            <string>app-store</string>
+            <key>teamID</key>
+            <string>$APPLE_TEAM_ID</string>
+            <key>uploadBitcode</key>
+            <false/>
+            <key>uploadSymbols</key>
+            <true/>
+            <key>provisioningProfiles</key>
+            <dict>
+              <key>com.florasonics.app</key>
+              <string>FloraSonics</string>
+            </dict>
+          </dict>
+          </plist>
+          EOF
+
       - name: Build iOS
         script: |
           xcode-project build-ipa \
             --project "ios/App/App.xcodeproj" \
             --scheme "App" \
-            --config "Release"
+            --config "Release" \
+            --export-options-plist /Users/builder/export_options.plist
 
     artifacts:
       - build/ios/ipa/*.ipa
