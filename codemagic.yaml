@@ -9,10 +9,8 @@ workflows:
 
     environment:
       ios_signing:
-        provisioning_profiles:
-          - FloraSonics
-        certificates:
-          - FloraSonics App store
+        distribution_type: APP_STORE
+        bundle_identifier: com.florasonics.app
       vars:
         BUNDLE_ID: "com.florasonics.app"
         APP_STORE_APPLE_ID: "6761284963"
@@ -61,27 +59,10 @@ workflows:
 
       - name: Build iOS
         script: |
-          cat > /Users/builder/export_options.plist << 'EOF'
-          <?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0">
-          <dict>
-            <key>method</key>
-            <string>app-store</string>
-            <key>uploadBitcode</key>
-            <false/>
-            <key>uploadSymbols</key>
-            <true/>
-            <key>signingStyle</key>
-            <string>automatic</string>
-          </dict>
-          </plist>
-          EOF
           xcode-project build-ipa \
             --project "ios/App/App.xcodeproj" \
             --scheme "App" \
-            --config "Release" \
-            --export-options-plist /Users/builder/export_options.plist
+            --config "Release"
 
     artifacts:
       - build/ios/ipa/*.ipa
