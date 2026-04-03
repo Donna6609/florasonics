@@ -23,22 +23,39 @@ workflows:
     scripts:
       - name: Use Node 22
         script: |
+          export NVM_DIR="$HOME/.nvm"
+          [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
           nvm install 22
           nvm use 22
           node --version
+          echo "22" > .nvmrc
 
       - name: Install dependencies
-        script: npm install
+        script: |
+          export NVM_DIR="$HOME/.nvm"
+          [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+          nvm use 22
+          npm install
 
       - name: Build web app
-        script: npm run build
+        script: |
+          export NVM_DIR="$HOME/.nvm"
+          [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+          nvm use 22
+          npm run build
 
       - name: Install Capacitor
         script: |
+          export NVM_DIR="$HOME/.nvm"
+          [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+          nvm use 22
           npm install @capacitor/core @capacitor/cli @capacitor/ios
 
       - name: Generate app icon
         script: |
+          export NVM_DIR="$HOME/.nvm"
+          [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+          nvm use 22
           npm install --save-dev @capacitor/assets
           npx capacitor-assets generate --ios
         working_directory: .
@@ -46,6 +63,10 @@ workflows:
       - name: Add iOS platform, sync and install pods
         script: |
           set -e
+          export NVM_DIR="$HOME/.nvm"
+          [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+          nvm use 22
+          node --version
           rm -rf ios
           echo "--- capacitor.config.ts contents ---"
           cat capacitor.config.ts
