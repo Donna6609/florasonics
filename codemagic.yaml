@@ -10,12 +10,13 @@ workflows:
     environment:
       ios_signing:
         distribution_type: app_store
-        bundle_identifier: com.base698ab9ae938dc61b1a405bd7.app
+        bundle_identifier: com.florasonics.app
       vars:
-        BUNDLE_ID: "com.base698ab9ae938dc61b1a405bd7.app"
+        BUNDLE_ID: "com.florasonics.app"
         APP_STORE_APPLE_ID: "6761284963"
-      node: 22.0.0
+      node: 18.17.0
       xcode: 16.2
+      cocoapods: 1.15.2
 
     scripts:
       - name: Install dependencies
@@ -28,30 +29,27 @@ workflows:
         script: |
           npm install @capacitor/core @capacitor/cli @capacitor/ios
 
-      - name: Add iOS platform and sync
+      - name: Generate app icon
+        script: |
+          npm install --save-dev @capacitor/assets
+          npx capacitor-assets generate --ios
+        working_directory: .
+
+      - name: Add iOS platform, sync and install pods
         script: |
           set -e
           rm -rf ios
+          echo "--- capacitor.config.ts contents ---"
+          cat capacitor.config.ts
+          echo "--- running cap add ios ---"
           npx cap add ios
+          echo "--- running cap sync ios ---"
           npx cap sync ios
-
-      - name: Overwrite AppDelegate.swift with clean version
-        script: |
-          printf 'import UIKit\nimport Capacitor\n\n@UIApplicationMain\nclass AppDelegate: UIResponder, UIApplicationDelegate {\n\n    var window: UIWindow?\n\n    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {\n        return true\n    }\n\n    func applicationWillResignActive(_ application: UIApplication) {}\n    func applicationDidEnterBackground(_ application: UIApplication) {}\n    func applicationWillEnterForeground(_ application: UIApplication) {}\n    func applicationDidBecomeActive(_ application: UIApplication) {}\n    func applicationWillTerminate(_ application: UIApplication) {}\n\n    func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey: Any] = [:]) -> Bool {\n        return ApplicationDelegateProxy.shared.application(app, open: url, options: options)\n    }\n}\n' > ios/App/App/AppDelegate.swift
-
-      - name: Set code signing settings
-        script: |
-          PBXPROJ="ios/App/App.xcodeproj/project.pbxproj"
-          sed -i '' 's/CODE_SIGN_STYLE = Automatic/CODE_SIGN_STYLE = Manual/g' "$PBXPROJ"
-          sed -i '' 's/DEVELOPMENT_TEAM = "";/DEVELOPMENT_TEAM = $APPLE_TEAM_ID;/g' "$PBXPROJ"
-          sed -i '' 's/DEVELOPMENT_TEAM = ;/DEVELOPMENT_TEAM = $APPLE_TEAM_ID;/g' "$PBXPROJ"
-          xcode-project use-profiles
-
-      - name: Resolve Swift Package Manager dependencies
-        script: |
-          xcodebuild -resolvePackageDependencies \
-            -project ios/App/App.xcodeproj \
-            -scheme App
+          echo "--- checking ios/App directory ---"
+          ls -la ios/App/
+          echo "--- installing CocoaPods ---"
+          cd ios/App
+          pod install --repo-update
 
       - name: Set build number
         script: |
@@ -62,7 +60,7 @@ workflows:
       - name: Build iOS
         script: |
           xcode-project build-ipa \
-            --project "ios/App/App.xcodeproj" \
+            --workspace "ios/App/App.xcworkspace" \
             --scheme "App" \
             --config "Release"
 
@@ -75,3 +73,53 @@ workflows:
         auth: integration
         submit_to_testflight: true
         submit_to_app_store: false
+
+  android-release:
+    name: FloraSonics Android Release
+    max_build_duration: 60
+    instance_type: linux_x2
+
+    environment:
+      android_signing:
+        - keystore_reference: florasonics_keystore
+      vars:
+        PACKAGE_NAME: "com.florasonics.app"
+      node: 18.17.0
+      java: 17
+      gradle: 7.6
+
+    scripts:
+      - name: Install dependencies
+        script: npm install
+
+      - name: Build web app
+        script: npm run build
+
+      - name: Install Capacitor
+        script: |
+          npm install @capacitor/core @capacitor/cli @capacitor/android
+
+      - name: Generate app icon
+        script: |
+          npm install --save-dev @capacitor/assets
+          npx capacitor-assets generate --android
+        working_directory: .
+
+      - name: Add Android platform and sync
+        script: |
+          set -e
+          rm -rf android
+          echo "--- running cap add android ---"
+          npx cap add android
+          echo "--- running cap sync android ---"
+          npx cap sync android
+
+      - name: Build Android
+        script: |
+          cd android
+          ./gradlew build
+          ./gradlew bundleRelease
+
+    artifacts:
+      - android/app/build/outputs/**/*.aab
+      - android/app/build/outputs/**/*.apk
