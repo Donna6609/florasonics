@@ -21,41 +21,20 @@ workflows:
       cocoapods: 1.15.2
 
     scripts:
-      - name: Use Node 22
-        script: |
-          export NVM_DIR="$HOME/.nvm"
-          [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
-          nvm install 22
-          nvm use 22
-          node --version
-          echo "22" > .nvmrc
+      - name: Print Node version
+        script: node --version
 
       - name: Install dependencies
-        script: |
-          export NVM_DIR="$HOME/.nvm"
-          [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
-          nvm use 22
-          npm install
+        script: npm install
 
       - name: Build web app
-        script: |
-          export NVM_DIR="$HOME/.nvm"
-          [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
-          nvm use 22
-          npm run build
+        script: npm run build
 
       - name: Install Capacitor
-        script: |
-          export NVM_DIR="$HOME/.nvm"
-          [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
-          nvm use 22
-          npm install @capacitor/core @capacitor/cli @capacitor/ios
+        script: npm install @capacitor/core @capacitor/cli @capacitor/ios
 
       - name: Generate app icon
         script: |
-          export NVM_DIR="$HOME/.nvm"
-          [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
-          nvm use 22
           npm install --save-dev @capacitor/assets
           npx capacitor-assets generate --ios
         working_directory: .
@@ -63,9 +42,6 @@ workflows:
       - name: Add iOS platform, sync and install pods
         script: |
           set -e
-          export NVM_DIR="$HOME/.nvm"
-          [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
-          nvm use 22
           node --version
           rm -rf ios
           echo "--- capacitor.config.ts contents ---"
@@ -117,11 +93,8 @@ workflows:
       java: 17
 
     scripts:
-      - name: Use Node 22
-        script: |
-          nvm install 22
-          nvm use 22
-          node --version
+      - name: Print Node version
+        script: node --version
 
       - name: Install dependencies
         script: npm install
@@ -130,8 +103,7 @@ workflows:
         script: npm run build
 
       - name: Install Capacitor
-        script: |
-          npm install @capacitor/core @capacitor/cli @capacitor/android
+        script: npm install @capacitor/core @capacitor/cli @capacitor/android
 
       - name: Generate app icon
         script: |
