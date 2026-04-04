@@ -15,7 +15,7 @@ workflows:
         BUNDLE_ID: "com.base698ab9ae938dc61b1a405bd7.app"
         APP_STORE_APPLE_ID: "6761284963"
         EXPORT_OPTIONS_PATH: "$HOME/export_options.plist"
-      node: 18.17.0
+      node: 22.11.0
       xcode: 16.2
       cocoapods: 1.15.2
 
