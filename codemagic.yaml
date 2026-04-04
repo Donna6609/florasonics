@@ -8,16 +8,18 @@ workflows:
       app_store_connect: FloraSonics Codemagic
 
     environment:
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.florasonics.app
       vars:
         BUNDLE_ID: "com.florasonics.app"
         APP_STORE_APPLE_ID: "6761284963"
-      node: 22.0.0
+        EXPORT_OPTIONS_PATH: "$HOME/export_options.plist"
+      node: 18.17.0
       xcode: 16.2
+      cocoapods: 1.15.2
 
     scripts:
-      - name: Print Node version
-        script: node --version
-
       - name: Install dependencies
         script: npm install
 
@@ -25,7 +27,8 @@ workflows:
         script: npm run build
 
       - name: Install Capacitor
-        script: npm install @capacitor/core @capacitor/cli @capacitor/ios
+        script: |
+          npm install @capacitor/core @capacitor/cli @capacitor/ios
 
       - name: Generate app icon
         script: |
@@ -36,17 +39,11 @@ workflows:
       - name: Add iOS platform, sync and install pods
         script: |
           set -e
-          node --version
           rm -rf ios
-          echo "--- capacitor.config.ts contents ---"
-          cat capacitor.config.ts
-          echo "--- running cap add ios ---"
           npx cap add ios
-          echo "--- running cap sync ios ---"
           npx cap sync ios
-          echo "--- checking ios/App directory ---"
-          ls -la ios/App/
-          echo "--- iOS platform ready (SPM, no CocoaPods needed) ---"
+          cd ios/App
+          pod install --repo-update
 
       - name: Set build number
         script: |
@@ -54,27 +51,34 @@ workflows:
           agvtool new-version -all $((BUILD_NUMBER + 1))
         working_directory: ios/App
 
-      - name: Fetch signing files and set up keychain
-        script: |
-          keychain initialize
-          PRIVATE_KEY=$(openssl genrsa 2048 | openssl pkcs8 -topk8 -nocrypt)
-          app-store-connect fetch-signing-files "$BUNDLE_ID" \
-            --type IOS_APP_STORE \
-            --create \
-            --certificate-key "$PRIVATE_KEY"
-          keychain add-certificates
-
       - name: Build iOS
         script: |
           set -e
+          cat > "$HOME/export_options.plist" << 'EOF'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+          <key>method</key>
+          <string>app-store</string>
+          <key>signingStyle</key>
+          <string>automatic</string>
+          <key>teamID</key>
+          <string>KQ6PQHYD5D</string>
+          <key>stripSwiftSymbols</key>
+          <true/>
+          </dict>
+          </plist>
+          EOF
           xcode-project build-ipa \
-            --project "ios/App/App.xcodeproj" \
+            --workspace "ios/App/App.xcworkspace" \
             --scheme "App" \
-            --archive-xcargs "COMPILER_INDEX_STORE_ENABLE=NO CODE_SIGN_STYLE=Automatic DEVELOPMENT_TEAM=4CYS3PZNWH"
+            --config "Release" \
+            --export-options-plist "$HOME/export_options.plist"
 
     artifacts:
       - build/ios/ipa/*.ipa
-      - build/ios/xcarchive/*.xcarchive
+      - /tmp/xcodebuild_logs/*.log
 
     publishing:
       app_store_connect:
@@ -89,16 +93,14 @@ workflows:
 
     environment:
       android_signing:
-        - keystore: florasonics_keystore
+        - keystore_reference: florasonics_keystore
       vars:
         PACKAGE_NAME: "com.florasonics.app"
-      node: 22.0.0
+      node: 18.17.0
       java: 17
+      gradle: 7.6
 
     scripts:
-      - name: Print Node version
-        script: node --version
-
       - name: Install dependencies
         script: npm install
 
@@ -106,7 +108,8 @@ workflows:
         script: npm run build
 
       - name: Install Capacitor
-        script: npm install @capacitor/core @capacitor/cli @capacitor/android
+        script: |
+          npm install @capacitor/core @capacitor/cli @capacitor/android
 
       - name: Generate app icon
         script: |
@@ -118,9 +121,7 @@ workflows:
         script: |
           set -e
           rm -rf android
-          echo "--- running cap add android ---"
           npx cap add android
-          echo "--- running cap sync android ---"
           npx cap sync android
 
       - name: Build Android
