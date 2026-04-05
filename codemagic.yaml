@@ -54,7 +54,7 @@ workflows:
 
       - name: Set up code signing
         script: |
-          xcode-project use-profiles
+          xcode-project use-profiles --custom-export-options '{"method":"app-store","teamID":"4CYS3PZNWH","signingStyle":"manual","stripSwiftSymbols":true}'
 
       - name: Build iOS
         script: |
@@ -62,7 +62,8 @@ workflows:
           xcode-project build-ipa \
             --project "ios/App/App.xcodeproj" \
             --scheme "App" \
-            --config "Release"
+            --config "Release" \
+            --archive-flags="-destination 'generic/platform=iOS'"
 
     artifacts:
       - build/ios/ipa/*.ipa
