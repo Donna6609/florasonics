@@ -38,6 +38,7 @@ workflows:
       - name: Add iOS platform, sync and install pods
         script: |
           set -e
+          npx cap add ios
           npx cap sync ios
           cd ios/App
           pod install --repo-update
