@@ -11,12 +11,14 @@ workflows:
       ios_signing:
         distribution_type: app_store
         bundle_identifier: com.base698ab9ae938dc61b1a405bd7.app
+        certificate_reference: IOS-Apple
+        provisioning_profile_reference: IOS-Apple
       vars:
         BUNDLE_ID: "com.base698ab9ae938dc61b1a405bd7.app"
         APP_STORE_APPLE_ID: "6761284963"
-        EXPORT_OPTIONS_PATH: "$HOME/export_options.plist"
-      node: 22.11.0
+      node: 18.17.0
       xcode: 16.2
+      cocoapods: 1.15.2
 
     scripts:
       - name: Install dependencies
@@ -35,16 +37,24 @@ workflows:
           npx capacitor-assets generate --ios
         working_directory: .
 
-      - name: Add iOS platform and sync
+      - name: Add iOS platform, sync and install pods
         script: |
           set -e
-          npx cap add ios
           npx cap sync ios
+          cd ios/App
+          pod install --repo-update
 
       - name: Fix bundle identifier in Xcode
         script: |
           cd ios/App
-          sed -i '' 's/PRODUCT_BUNDLE_IDENTIFIER = .*/PRODUCT_BUNDLE_IDENTIFIER = com.base698ab9ae938dc61b1a405bd7.app;/g' App.xcodeproj/project.pbxproj
+          xcode-project update-bundle-id --bundle-id com.base698ab9ae938dc61b1a405bd7.app
+
+      - name: Set signing settings
+        script: |
+          cd ios/App
+          xcodebuild -workspace App.xcworkspace \
+            -scheme App \
+            -showBuildSettings 2>/dev/null | grep -E "DEVELOPMENT_TEAM|CODE_SIGN" || true
 
       - name: Set build number
         script: |
@@ -52,52 +62,17 @@ workflows:
           agvtool new-version -all $((BUILD_NUMBER + 1))
         working_directory: ios/App
 
-      - name: Set up code signing
-        script: |
-          xcode-project use-profiles
-          cat > /tmp/export_options.plist << 'EOF'
-          <?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0">
-          <dict>
-            <key>method</key>
-            <string>app-store</string>
-            <key>teamID</key>
-            <string>69ZJ5789G5</string>
-            <key>signingStyle</key>
-            <string>manual</string>
-            <key>stripSwiftSymbols</key>
-            <true/>
-          </dict>
-          </plist>
-          EOF
-
       - name: Build iOS
         script: |
           set -e
-          mkdir -p /tmp/xcodebuild_logs
-          xcodebuild \
-            -project ios/App/App.xcodeproj \
-            -scheme App \
-            -config Release \
-            -destination "generic/platform=iOS" \
-            -archivePath /tmp/App.xcarchive \
-            archive \
-            COMPILER_INDEX_STORE_ENABLE=NO \
-            DEVELOPMENT_TEAM=69ZJ5789G5 \
-            CODE_SIGN_IDENTITY="Apple Distribution" \
-            CODE_SIGN_STYLE=Manual \
-            2>&1 | tee /tmp/xcodebuild_logs/build.log
-          
-          xcodebuild \
-            -exportArchive \
-            -archivePath /tmp/App.xcarchive \
-            -exportOptionsPlist /tmp/export_options.plist \
-            -exportPath /tmp/ipa \
-            2>&1 | tee -a /tmp/xcodebuild_logs/build.log
+          xcode-project use-profiles
+          xcode-project build-ipa \
+            --workspace "ios/App/App.xcworkspace" \
+            --scheme "App" \
+            --config "Release"
 
     artifacts:
-      - /tmp/ipa/*.ipa
+      - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
 
     publishing:
@@ -113,7 +88,8 @@ workflows:
 
     environment:
       android_signing:
-        - florasonics_keystore
+        - keystore_reference: florasonics_keystore
+          keystore: florasonics_keystore
       vars:
         PACKAGE_NAME: "com.base698ab9ae938dc61b1a405bd7.app"
       node: 18.17.0
