@@ -1,136 +1,51 @@
 workflows:
   ios-release:
-    name: FloraSonics iOS Release v2
-    max_build_duration: 60
-    instance_type: mac_mini_m1
-
-    integrations:
-      app_store_connect: FloraSonics Codemagic
-
+    name: iOS Release Build
     environment:
-      ios_signing:
-        distribution_type: app_store
-        bundle_identifier: com.base698ab9ae938dc61b1a405bd7.app
-      vars:
-        BUNDLE_ID: "com.base698ab9ae938dc61b1a405bd7.app"
-        APP_STORE_APPLE_ID: "6761284963"
-      node: 22.14.0
-      xcode: 16.2
-      cocoapods: 1.15.2
-
+      xcode: latest
+      cocoapods: default
+    triggers:
+      - push:
+          branches:
+            - main
     scripts:
       - name: Install dependencies
         script: npm install
-
-      - name: Build web app
-        script: npm run build
-
-      - name: Install Capacitor
+      - name: Install CocoaPods dependencies
+        script: cd ios && pod install && cd ..
+      - name: Build with Capacitor
+        script: npx cap sync ios
+      - name: Build iOS app
         script: |
-          npm install @capacitor/core @capacitor/cli @capacitor/ios
-
-      - name: Generate app icon
-        script: |
-          npm install --save-dev @capacitor/assets
-          npx capacitor-assets generate --ios
-        working_directory: .
-
-      - name: Add iOS platform, sync and install pods
-        script: |
-          set -e
-          npx cap add ios
-          npx cap sync ios
-          if [ -f "ios/App/Podfile" ]; then
-            cd ios/App
-            pod install --repo-update
-          else
-            echo "No Podfile found — using Swift Package Manager, skipping pod install"
-          fi
-
-      - name: Fix bundle identifier in Xcode
-        script: |
-          sed -i '' 's/PRODUCT_BUNDLE_IDENTIFIER = .*/PRODUCT_BUNDLE_IDENTIFIER = com.base698ab9ae938dc61b1a405bd7.app;/g' ios/App/App.xcodeproj/project.pbxproj
-
-      - name: Set signing settings
-        script: |
-          cd ios/App
-          xcodebuild -project App.xcodeproj \
+          xcodebuild -workspace ios/App/App.xcworkspace \
             -scheme App \
-            -showBuildSettings 2>/dev/null | grep -E "DEVELOPMENT_TEAM|CODE_SIGN" || true
-
-      - name: Set build number
-        script: |
-          BUILD_NUMBER=$(app-store-connect get-latest-app-store-build-number "$APP_STORE_APPLE_ID" 2>/dev/null || echo "0")
-          agvtool new-version -all $((BUILD_NUMBER + 1))
-        working_directory: ios/App
-
-      - name: Build iOS
-        script: |
-          set -e
-          echo "=== Listing ios/App directory ==="
-          ls -la ios/App/
-          echo "=== Listing ios/App/App directory ==="
-          ls -la ios/App/App/ || true
-          xcode-project use-profiles
-          xcode-project build-ipa \
-            --project "ios/App/App.xcodeproj" \
-            --scheme "App" \
-            --config "Release" \
-            --disable-xcpretty
-
+            -configuration Release \
+            -derivedDataPath build
     artifacts:
-      - build/ios/ipa/*.ipa
-      - /tmp/xcodebuild_logs/*.log
-
+      - build/Release-iphoneos/App.ipa
     publishing:
       app_store_connect:
-        auth: integration
-        submit_to_testflight: true
-        submit_to_app_store: false
+        auth: key_id:issuer_id:p8_key
 
   android-release:
-    name: FloraSonics Android Release
-    max_build_duration: 60
-    instance_type: linux_x2
-
+    name: Android Release Build
     environment:
-      android_signing:
-        - florasonics_keystore
-      vars:
-        PACKAGE_NAME: "com.base698ab9ae938dc61b1a405bd7.app"
-      node: 22.14.0
-      java: 17
-
+      java: default
+      node: latest
+    triggers:
+      - push:
+          branches:
+            - main
     scripts:
       - name: Install dependencies
         script: npm install
-
-      - name: Build web app
-        script: npm run build
-
-      - name: Install Capacitor
-        script: |
-          npm install @capacitor/core @capacitor/cli @capacitor/android
-
-      - name: Generate app icon
-        script: |
-          npm install --save-dev @capacitor/assets
-          npx capacitor-assets generate --android
-        working_directory: .
-
-      - name: Add Android platform and sync
-        script: |
-          set -e
-          rm -rf android
-          npx cap add android
-          npx cap sync android
-
-      - name: Build Android
-        script: |
-          cd android
-          ./gradlew build
-          ./gradlew bundleRelease
-
+      - name: Build with Capacitor
+        script: npx cap sync android
+      - name: Build Android app
+        script: cd android && ./gradlew bundleRelease && cd ..
     artifacts:
-      - android/app/build/outputs/**/*.aab
-      - android/app/build/outputs/**/*.apk
+      - android/app/build/outputs/bundle/release/app-release.aab
+    publishing:
+      google_play:
+        credentials: $GOOGLE_PLAY_SERVICE_ACCOUNT_CREDENTIALS
+        track: internal
