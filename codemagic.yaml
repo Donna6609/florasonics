@@ -52,30 +52,17 @@ workflows:
           agvtool new-version -all $((BUILD_NUMBER + 1))
         working_directory: ios/App
 
+      - name: Set up code signing
+        script: |
+          xcode-project use-profiles
+
       - name: Build iOS
         script: |
           set -e
-          cat > "$HOME/export_options.plist" << 'EOF'
-          <?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0">
-          <dict>
-          <key>method</key>
-          <string>app-store</string>
-          <key>signingStyle</key>
-          <string>manual</string>
-          <key>teamID</key>
-          <string>KQ6PQHYD5D</string>
-          <key>stripSwiftSymbols</key>
-          <true/>
-          </dict>
-          </plist>
-          EOF
           xcode-project build-ipa \
             --project "ios/App/App.xcodeproj" \
             --scheme "App" \
-            --config "Release" \
-            --export-options-plist "$HOME/export_options.plist"
+            --config "Release"
 
     artifacts:
       - build/ios/ipa/*.ipa
