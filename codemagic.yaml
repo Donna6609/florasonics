@@ -54,7 +54,7 @@ workflows:
       - name: Set signing settings
         script: |
           cd ios/App
-          xcodebuild -workspace App.xcworkspace \
+          xcodebuild -project App.xcodeproj \
             -scheme App \
             -showBuildSettings 2>/dev/null | grep -E "DEVELOPMENT_TEAM|CODE_SIGN" || true
 
@@ -68,19 +68,15 @@ workflows:
         script: |
           set -e
           echo "=== Listing ios/App directory ==="
-          ls -la ios/App/ || true
+          ls -la ios/App/
+          echo "=== Listing ios/App/App directory ==="
+          ls -la ios/App/App/ || true
           xcode-project use-profiles
-          if [ -d "ios/App/App.xcworkspace" ]; then
-            xcode-project build-ipa \
-              --workspace "ios/App/App.xcworkspace" \
-              --scheme "App" \
-              --config "Release"
-          else
-            xcode-project build-ipa \
-              --project "ios/App/App.xcodeproj" \
-              --scheme "App" \
-              --config "Release"
-          fi
+          xcode-project build-ipa \
+            --project "ios/App/App.xcodeproj" \
+            --scheme "App" \
+            --config "Release" \
+            --disable-xcpretty
 
     artifacts:
       - build/ios/ipa/*.ipa
