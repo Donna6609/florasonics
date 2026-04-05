@@ -40,8 +40,12 @@ workflows:
           set -e
           npx cap add ios
           npx cap sync ios
-          cd ios/App
-          pod install --repo-update
+          if [ -f "ios/App/Podfile" ]; then
+            cd ios/App
+            pod install --repo-update
+          else
+            echo "No Podfile found — using Swift Package Manager, skipping pod install"
+          fi
 
       - name: Fix bundle identifier in Xcode
         script: |
