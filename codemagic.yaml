@@ -44,7 +44,7 @@ workflows:
       - name: Fix bundle identifier in Xcode
         script: |
           cd ios/App
-          xcode-project update-bundle-id --bundle-id com.base698ab9ae938dc61b1a405bd7.app
+          sed -i '' 's/PRODUCT_BUNDLE_IDENTIFIER = .*/PRODUCT_BUNDLE_IDENTIFIER = com.base698ab9ae938dc61b1a405bd7.app;/g' App.xcodeproj/project.pbxproj
 
       - name: Set build number
         script: |
