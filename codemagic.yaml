@@ -86,8 +86,7 @@ workflows:
 
     environment:
       android_signing:
-        - keystore_reference: florasonics_keystore
-          keystore: florasonics_keystore
+        - florasonics_keystore
       vars:
         PACKAGE_NAME: "com.base698ab9ae938dc61b1a405bd7.app"
       node: 18.17.0
