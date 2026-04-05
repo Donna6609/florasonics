@@ -63,7 +63,7 @@ workflows:
             <key>method</key>
             <string>app-store</string>
             <key>teamID</key>
-            <string>4CYS3PZNWH</string>
+            <string>69ZJ5789G5</string>
             <key>signingStyle</key>
             <string>manual</string>
             <key>stripSwiftSymbols</key>
@@ -84,7 +84,7 @@ workflows:
             -archivePath /tmp/App.xcarchive \
             archive \
             COMPILER_INDEX_STORE_ENABLE=NO \
-            DEVELOPMENT_TEAM=4CYS3PZNWH \
+            DEVELOPMENT_TEAM=69ZJ5789G5 \
             CODE_SIGN_IDENTITY="Apple Distribution" \
             CODE_SIGN_STYLE=Manual \
             2>&1 | tee /tmp/xcodebuild_logs/build.log
