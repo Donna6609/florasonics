@@ -17,7 +17,6 @@ workflows:
         EXPORT_OPTIONS_PATH: "$HOME/export_options.plist"
       node: 22.11.0
       xcode: 16.2
-      cocoapods: 1.15.2
 
     scripts:
       - name: Install dependencies
@@ -36,13 +35,11 @@ workflows:
           npx capacitor-assets generate --ios
         working_directory: .
 
-      - name: Add iOS platform, sync and install pods
+      - name: Add iOS platform and sync
         script: |
           set -e
           npx cap add ios
           npx cap sync ios
-          cd ios/App
-          pod install --repo-update
 
       - name: Fix bundle identifier in Xcode
         script: |
@@ -75,7 +72,7 @@ workflows:
           </plist>
           EOF
           xcode-project build-ipa \
-            --workspace "ios/App/App.xcworkspace" \
+            --project "ios/App/App.xcodeproj" \
             --scheme "App" \
             --config "Release" \
             --export-options-plist "$HOME/export_options.plist"
