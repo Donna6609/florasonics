@@ -1,51 +1,160 @@
 workflows:
   ios-release:
-    name: iOS Release Build
+    name: FloraSonics iOS Release v2
+    max_build_duration: 60
+    instance_type: mac_mini_m1
+
+    integrations:
+      app_store_connect: FloraSonics Codemagic
+
     environment:
-      xcode: latest
-      cocoapods: default
-    triggers:
-      - push:
-          branches:
-            - main
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.base698ab9ae938dc61b1a405bd7.app
+      vars:
+        BUNDLE_ID: "com.base698ab9ae938dc61b1a405bd7.app"
+        APP_STORE_APPLE_ID: "6761284963"
+        FASTLANE_USER: Donnalockett@ymail.com
+        FASTLANE_PASSWORD: Lanaejr1908@%
+        FASTLANE_MATCH_REPO: https://github.com/Donna6609/certificates
+      node: 22.14.0
+      xcode: 16.2
+      cocoapods: 1.15.2
+
     scripts:
+      - name: Setup Fastlane and Match
+        script: |
+          sudo gem install fastlane -NV
+          mkdir -p ~/.fastlane
+          
       - name: Install dependencies
         script: npm install
-      - name: Install CocoaPods dependencies
-        script: cd ios && pod install && cd ..
-      - name: Build with Capacitor
-        script: npx cap sync ios
-      - name: Build iOS app
+
+      - name: Build web app
+        script: npm run build
+
+      - name: Install Capacitor
         script: |
-          xcodebuild -workspace ios/App/App.xcworkspace \
-            -scheme App \
-            -configuration Release \
-            -derivedDataPath build
+          npm install @capacitor/core @capacitor/cli @capacitor/ios
+
+      - name: Generate app icon
+        script: |
+          npm install --save-dev @capacitor/assets
+          npx capacitor-assets generate --ios
+        working_directory: .
+
+      - name: Add iOS platform, sync and install pods
+        script: |
+          set -e
+          npx cap add ios
+          npx cap sync ios
+          if [ -f "ios/App/Podfile" ]; then
+            cd ios/App
+            pod install --repo-update
+          else
+            echo "No Podfile found - using Swift Package Manager, skipping pod install"
+          fi
+
+      - name: Fix bundle identifier in Xcode
+        script: |
+          sed -i '' 's/PRODUCT_BUNDLE_IDENTIFIER = .*/PRODUCT_BUNDLE_IDENTIFIER = com.base698ab9ae938dc61b1a405bd7.app;/g' ios/App/App.xcodeproj/project.pbxproj
+
+      - name: Create App Store Connect API Key file
+        script: |
+          echo "$APPSTORE_API_KEY_JSON" > $HOME/appstore_api_key.json
+          
+      - name: Generate Signing Assets with Fastlane Match
+        script: |
+          cd ios/App
+          fastlane match appstore \
+            --api_key_path $HOME/appstore_api_key.json \
+            --app_identifier $BUNDLE_ID \
+            --type distribution \
+            --readonly false \
+            --force_for_new_devices \
+            --skip_confirmation
+
+      - name: Set build number
+        script: |
+          BUILD_NUMBER=$(app-store-connect get-latest-app-store-build-number "$APP_STORE_APPLE_ID" 2>/dev/null || echo "0")
+          agvtool new-version -all $((BUILD_NUMBER + 1))
+        working_directory: ios/App
+
+      - name: Build iOS
+        script: |
+          set -e
+          echo "=== Listing ios/App directory ==="
+          ls -la ios/App/
+          echo "=== Listing ios/App/App directory ==="
+          ls -la ios/App/App/ || true
+          xcode-project use-profiles
+          xcode-project build-ipa \
+            --project "ios/App/App.xcodeproj" \
+            --scheme "App" \
+            --config "Release" \
+            --disable-xcpretty
+
     artifacts:
-      - build/Release-iphoneos/App.ipa
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+
     publishing:
       app_store_connect:
-        auth: key_id:issuer_id:p8_key
+        auth: integration
+        submit_to_testflight: true
+        submit_to_app_store: false
 
   android-release:
-    name: Android Release Build
+    name: FloraSonics Android Release
+    max_build_duration: 60
+    instance_type: linux_x2
+
     environment:
-      java: default
-      node: latest
-    triggers:
-      - push:
-          branches:
-            - main
+      android_signing:
+        - florasonics_keystore
+      vars:
+        PACKAGE_NAME: "com.base698ab9ae938dc61b1a405bd7.app"
+      node: 22.14.0
+      java: 17
+
     scripts:
       - name: Install dependencies
         script: npm install
-      - name: Build with Capacitor
-        script: npx cap sync android
-      - name: Build Android app
-        script: cd android && ./gradlew bundleRelease && cd ..
+
+      - name: Build web app
+        script: npm run build
+
+      - name: Install Capacitor
+        script: |
+          npm install @capacitor/core @capacitor/cli @capacitor/android
+
+      - name: Generate app icon
+        script: |
+          npm install --save-dev @capacitor/assets
+          npx capacitor-assets generate --android
+        working_directory: .
+
+      - name: Add Android platform and sync
+        script: |
+          set -e
+          rm -rf android
+          npx cap add android
+          npx cap sync android
+
+      - name: Enable R8 minification
+        script: |
+          sed -i 's/minifyEnabled false/minifyEnabled true/g' android/app/build.gradle || true
+          sed -i 's/shrinkResources false/shrinkResources true/g' android/app/build.gradle || true
+
+      - name: Build Android
+        script: |
+          cd android
+          ./gradlew build
+          ./gradlew bundleRelease
+          find app/build -name '*.so' | zip -j app/build/outputs/native-debug-symbols.zip -@ || true
+
     artifacts:
-      - android/app/build/outputs/bundle/release/app-release.aab
-    publishing:
-      google_play:
-        credentials: $GOOGLE_PLAY_SERVICE_ACCOUNT_CREDENTIALS
-        track: internal
+      - android/app/build/outputs/**/*.aab
+      - android/app/build/outputs/**/*.apk
+      - android/app/build/outputs/mapping/release/mapping.txt
+      - android/app/build/outputs/native-debug-symbols.zip
