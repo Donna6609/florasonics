@@ -154,7 +154,7 @@ workflows:
       - name: Sign and Build Android
         script: |
           cd android
-          ./gradlew bundleRelease \
+          ./gradlew bundleRelease -PdisableMinification=true \
             -Pandroid.injected.signing.store.file=/tmp/florasonics.keystore \
             -Pandroid.injected.signing.store.password=$CM_KEYSTORE_PASSWORD \
             -Pandroid.injected.signing.key.alias=$CM_KEY_ALIAS \
