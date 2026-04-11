@@ -148,7 +148,8 @@ workflows:
 
       - name: Decode Keystore
         script: |
-          echo $CM_KEYSTORE | tr -d '[:space:]' | base64 -d > /tmp/florasonics.keystore
+          printf '%s' "$CM_KEYSTORE" | tr -d '[:space:]' | base64 -d > /tmp/florasonics.keystore
+          ls -la /tmp/florasonics.keystore
 
       - name: Sign and Build Android
         script: |
