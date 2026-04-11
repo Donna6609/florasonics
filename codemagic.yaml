@@ -110,8 +110,6 @@ workflows:
     instance_type: linux_x2
 
     environment:
-      android_signing:
-        - florasonics_keystore
       vars:
         PACKAGE_NAME: "com.base698ab9ae938dc61b1a405bd7.app"
       node: 22.14.0
@@ -146,11 +144,15 @@ workflows:
           sed -i 's/minifyEnabled false/minifyEnabled true/g' android/app/build.gradle || true
           sed -i 's/shrinkResources false/shrinkResources true/g' android/app/build.gradle || true
 
-      - name: Build Android
+      - name: Sign and Build Android
         script: |
           cd android
           ./gradlew build
-          ./gradlew bundleRelease
+          ./gradlew bundleRelease \
+            -Pandroid.injected.signing.store.file=$CM_KEYSTORE_PATH \
+            -Pandroid.injected.signing.store.password=$CM_KEYSTORE_PASSWORD \
+            -Pandroid.injected.signing.key.alias=$CM_KEY_ALIAS \
+            -Pandroid.injected.signing.key.password=$CM_KEY_PASSWORD
           find app/build -name '*.so' | zip -j app/build/outputs/native-debug-symbols.zip -@ || true
 
     artifacts:
