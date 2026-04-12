@@ -88,10 +88,9 @@ workflows:
     instance_type: linux_x2
 
     environment:
-      android_signing:
-        - keystore: florasonics_keystore
+    
       vars:
-        PACKAGE_NAME: "com.florasonics.app"
+        PACKAGE_NAME:"com.base698ab9ae938dc61b1a405bd7.app"
       node: 22.0.0
       java: 17
 
