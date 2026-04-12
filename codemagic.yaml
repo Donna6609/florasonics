@@ -10,9 +10,9 @@ workflows:
     environment:
       ios_signing:
         distribution_type: app_store
-        bundle_identifier: com.base698ab9ae938dc61b1a405bd7.app
+        bundle_identifier: com.florasonics.wellness
       vars:
-        BUNDLE_ID: "com.base698ab9ae938dc61b1a405bd7.app"
+        BUNDLE_ID: "com.florasonics.wellness"
         APP_STORE_APPLE_ID: "6761284963"
         FASTLANE_USER: Donnalockett@ymail.com
         FASTLANE_PASSWORD: Lanaejr1908@%
@@ -57,7 +57,7 @@ workflows:
 
       - name: Fix bundle identifier in Xcode
         script: |
-          sed -i '' 's/PRODUCT_BUNDLE_IDENTIFIER = .*/PRODUCT_BUNDLE_IDENTIFIER = com.base698ab9ae938dc61b1a405bd7.app;/g' ios/App/App.xcodeproj/project.pbxproj
+          sed -i '' 's/PRODUCT_BUNDLE_IDENTIFIER = .*/PRODUCT_BUNDLE_IDENTIFIER = com.florasonics.wellness;/g' ios/App/App.xcodeproj/project.pbxproj
 
       - name: Create App Store Connect API Key file
         script: |
@@ -104,6 +104,57 @@ workflows:
         submit_to_testflight: true
         submit_to_app_store: false
 
+  android-debug:
+    name: FloraSonics Android Debug
+    max_build_duration: 45
+    instance_type: linux_x2
+
+    environment:
+      vars:
+        PACKAGE_NAME: "com.florasonics.wellness"
+      node: 22.0.0
+      java: 21
+
+    scripts:
+      - name: Install dependencies
+        script: npm install
+
+      - name: Build web app
+        script: npm run build
+
+      - name: Install Capacitor
+        script: |
+          npm install @capacitor/core @capacitor/cli @capacitor/android
+
+      - name: Generate app icon
+        script: |
+          npm install --save-dev @capacitor/assets
+          npx capacitor-assets generate --android
+        working_directory: .
+
+      - name: Add Android platform and sync
+        script: |
+          set -e
+          rm -rf android
+          npx cap add android
+          npx cap sync android
+
+      - name: Build Debug APK
+        script: |
+          cd android
+          ./gradlew assembleDebug
+
+    artifacts:
+      - android/app/build/outputs/apk/debug/*.apk
+
+    publishing:
+      email:
+        recipients:
+          - $CM_BUILD_EMAIL
+        notify:
+          success: true
+          failure: true
+
   android-release:
     name: FloraSonics Android Release
     max_build_duration: 60
@@ -113,10 +164,7 @@ workflows:
       android_signing:
         - florasonics-keystore
       vars:
-        PACKAGE_NAME: "com.base698ab9ae938dc61b1a405bd7.app"
-        CM_KEYSTORE_PASSWORD: "FloraSonics2024!"
-        CM_KEY_ALIAS: "florasonics"
-        CM_KEY_PASSWORD: "FloraSonics2024!"
+        PACKAGE_NAME: "com.florasonics.wellness"
       node: 22.0.0
       java: 21
 
@@ -146,14 +194,20 @@ workflows:
 
       - name: Disable R8 minification
         script: |
+          # Disable minification to avoid build timeout
           sed -i 's/minifyEnabled true/minifyEnabled false/g' android/app/build.gradle || true
           sed -i 's/shrinkResources true/shrinkResources false/g' android/app/build.gradle || true
+
+      - name: Decode Keystore
+        script: |
+          printf '%s' "$CM_KEYSTORE" | tr -d '[:space:]' | base64 -d > /tmp/florasonics.keystore
+          ls -la /tmp/florasonics.keystore
 
       - name: Sign and Build Android
         script: |
           cd android
           ./gradlew bundleRelease \
-            -Pandroid.injected.signing.store.file=$CM_KEYSTORE_PATH \
+            -Pandroid.injected.signing.store.file=/tmp/florasonics.keystore \
             -Pandroid.injected.signing.store.password=$CM_KEYSTORE_PASSWORD \
             -Pandroid.injected.signing.key.alias=$CM_KEY_ALIAS \
             -Pandroid.injected.signing.key.password=$CM_KEY_PASSWORD
