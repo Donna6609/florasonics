@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">FloraSonics</string>
+    <string name="title_activity_main">FloraSonics</string>
+    <string name="package_name">com.base698ab9ae938dc61b1a405bd7.app</string>
+    <string name="custom_url_scheme">com.base698ab9ae938dc61b1a405bd7.app</string>
+</resources>
