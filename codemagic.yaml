@@ -154,7 +154,7 @@ workflows:
 
     environment:
       android_signing:
-        - florasonics-keystore
+        - florasonics keystore
       vars:
         PACKAGE_NAME: "com.florasonics.wellness"
       node: 22.0.0
