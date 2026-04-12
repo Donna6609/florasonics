@@ -147,14 +147,6 @@ workflows:
     artifacts:
       - android/app/build/outputs/apk/debug/*.apk
 
-    publishing:
-      email:
-        recipients:
-          - $CM_BUILD_EMAIL
-        notify:
-          success: true
-          failure: true
-
   android-release:
     name: FloraSonics Android Release
     max_build_duration: 60
