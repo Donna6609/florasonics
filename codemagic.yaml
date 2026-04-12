@@ -111,7 +111,7 @@ workflows:
 
     environment:
       android_signing:
-        - FloraSonics2
+        - florasonics-keystore
       vars:
         PACKAGE_NAME: "com.base698ab9ae938dc61b1a405bd7.app"
       node: 22.0.0
