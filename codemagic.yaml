@@ -114,6 +114,9 @@ workflows:
         - florasonics-keystore
       vars:
         PACKAGE_NAME: "com.base698ab9ae938dc61b1a405bd7.app"
+        CM_KEYSTORE_PASSWORD: "FloraSonics2024!"
+        CM_KEY_ALIAS: "florasonics"
+        CM_KEY_PASSWORD: "FloraSonics2024!"
       node: 22.0.0
       java: 21
 
