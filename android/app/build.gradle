@@ -1,10 +1,10 @@
 apply plugin: 'com.android.application'
 
 android {
-    namespace = "com.base698ab9ae938dc61b1a405bd7.app"
+    namespace = "com.florasonics.wellness"
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "com.base698ab9ae938dc61b1a405bd7.app"
+        applicationId "com.florasonics.wellness"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

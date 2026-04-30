@@ -20,7 +20,12 @@
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
+            </intent-filter>cd ..
+            grep -n "package" app/src/main/AndroidManifest.xml
+
+
+cd . .
+            grep -n "package" app/src/main/AndroidManifest.xml
 
         </activity>
 
