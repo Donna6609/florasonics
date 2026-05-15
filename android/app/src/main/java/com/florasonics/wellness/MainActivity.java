@@ -1,4 +1,4 @@
-package com.base698ab9ae938dc61b1a405bd7.app;
+package com.florasonics.wellness;
 
 import com.getcapacitor.BridgeActivity;
 
