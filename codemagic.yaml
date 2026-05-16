@@ -139,6 +139,16 @@ workflows:
           npx cap add android
           npx cap sync android
 
+      - name: Fix Java compatibility
+        script: |
+          find android -name "*.gradle" | xargs grep -l "JavaVersion.VERSION_21" | while read f; do
+            sed -i 's/JavaVersion.VERSION_21/JavaVersion.VERSION_17/g' "$f"
+          done
+          find android -name "*.gradle" | xargs grep -l "sourceCompatibility" | while read f; do
+            sed -i 's/sourceCompatibility = JavaVersion.VERSION_[0-9]*/sourceCompatibility = JavaVersion.VERSION_17/g' "$f"
+            sed -i 's/targetCompatibility = JavaVersion.VERSION_[0-9]*/targetCompatibility = JavaVersion.VERSION_17/g' "$f"
+          done
+
       - name: Enable R8 minification
         script: |
           sed -i 's/minifyEnabled false/minifyEnabled true/g' android/app/build.gradle || true
