@@ -70,7 +70,7 @@ export default function BottomTabBar({ currentPageName }) {
       style={{ paddingBottom: "var(--safe-area-inset-bottom)" }}
       aria-label="Main navigation"
     >
-      <div className="flex items-center justify-around px-4 py-2 max-w-2xl mx-auto w-full">
+      <div className="flex items-center justify-around px-4 py-2 max-w-3xl mx-auto w-full">
         {TABS.map((tab) => {
           const Icon = tab.icon;
           const isActive = currentPageName === tab.page;
