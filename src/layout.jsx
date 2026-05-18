@@ -9,6 +9,7 @@ export default function Layout({ children, currentPageName }) {
       document.documentElement.classList.toggle('dark', e.matches);
     };
 
+    // Apply on mount
     applyTheme(mediaQuery);
 
     mediaQuery.addEventListener('change', applyTheme);
@@ -16,8 +17,8 @@ export default function Layout({ children, currentPageName }) {
   }, []);
 
   return (
-    <div className="min-h-screen bg-background">
-      <main style={{ paddingBottom: 'calc(4rem + var(--safe-area-inset-bottom))' }}>
+    <div className="min-h-screen bg-background flex flex-col items-center">
+      <main className="w-full max-w-3xl" style={{ paddingBottom: 'calc(4rem + var(--safe-area-inset-bottom))' }}>
         {children}
       </main>
       <BottomTabBar currentPageName={currentPageName} />
