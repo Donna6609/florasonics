@@ -10,9 +10,9 @@ workflows:
     environment:
       ios_signing:
         distribution_type: app_store
-        bundle_identifier: com.base698ab9ae938dc61b1a405bd7.app
+        bundle_identifier: com.florasonics.wellness
       vars:
-        BUNDLE_ID: "com.base698ab9ae938dc61b1a405bd7.app"
+        BUNDLE_ID: "com.florasonics.wellness"
         APP_STORE_APPLE_ID: "6761284963"
         FASTLANE_USER: Donnalockett@ymail.com
         FASTLANE_PASSWORD: Lanaejr1908@%
@@ -26,7 +26,7 @@ workflows:
         script: |
           sudo gem install fastlane -NV
           mkdir -p ~/.fastlane
-          
+
       - name: Install dependencies
         script: npm install
 
@@ -36,6 +36,7 @@ workflows:
       - name: Install Capacitor
         script: |
           npm install @capacitor/core @capacitor/cli @capacitor/ios
+          npm install @capawesome-team/capacitor-in-app-purchases
 
       - name: Generate app icon
         script: |
@@ -57,12 +58,12 @@ workflows:
 
       - name: Fix bundle identifier in Xcode
         script: |
-          sed -i '' 's/PRODUCT_BUNDLE_IDENTIFIER = .*/PRODUCT_BUNDLE_IDENTIFIER = com.base698ab9ae938dc61b1a405bd7.app;/g' ios/App/App.xcodeproj/project.pbxproj
+          sed -i '' 's/PRODUCT_BUNDLE_IDENTIFIER = .*/PRODUCT_BUNDLE_IDENTIFIER = com.florasonics.wellness;/g' ios/App/App.xcodeproj/project.pbxproj
 
       - name: Create App Store Connect API Key file
         script: |
           echo "$APPSTORE_API_KEY_JSON" > $HOME/appstore_api_key.json
-          
+
       - name: Generate Signing Assets with Fastlane Match
         script: |
           cd ios/App
@@ -83,10 +84,6 @@ workflows:
       - name: Build iOS
         script: |
           set -e
-          echo "=== Listing ios/App directory ==="
-          ls -la ios/App/
-          echo "=== Listing ios/App/App directory ==="
-          ls -la ios/App/App/ || true
           xcode-project use-profiles
           xcode-project build-ipa \
             --project "ios/App/App.xcodeproj" \
@@ -106,13 +103,15 @@ workflows:
 
   android-release:
     name: FloraSonics Android Release
-    max_build_duration: 60
+    max_build_duration: 90
     instance_type: linux_x2
 
     environment:
+      android_signing:
+        - florasonics
       vars:
-        PACKAGE_NAME: "com.base698ab9ae938dc61b1a405bd7.app"
-      node: 22.14.0
+        PACKAGE_NAME: "com.florasonics.wellness"
+      node: 22.0.0
       java: 17
 
     scripts:
@@ -124,7 +123,7 @@ workflows:
 
       - name: Install Capacitor
         script: |
-          npm install @capacitor/core @capacitor/cli @capacitor/android
+          npm install @capacitor/core@6 @capacitor/cli@6 @capacitor/android@6
 
       - name: Generate app icon
         script: |
@@ -139,34 +138,77 @@ workflows:
           npx cap add android
           npx cap sync android
 
-      - name: Fix Java compatibility
+      - name: Patch Android Java 17 (post-sync)
         script: |
-          find android -name "*.gradle" | xargs grep -l "JavaVersion.VERSION_21" | while read f; do
-            sed -i 's/JavaVersion.VERSION_21/JavaVersion.VERSION_17/g' "$f"
+          find android -name '*.gradle' -o -name '*.gradle.kts' | xargs grep -l '21' 2>/dev/null | while read f; do
+            echo "Patching $f"
+            sed -i 's/JavaVersion\.VERSION_21/JavaVersion.VERSION_17/g' "$f"
+            sed -i 's/jvmTarget = "21"/jvmTarget = "17"/g' "$f"
+            sed -i "s/jvmTarget '21'/jvmTarget '17'/g" "$f"
+            sed -i 's/sourceCompatibility JavaVersion\.VERSION_21/sourceCompatibility JavaVersion.VERSION_17/g' "$f"
+            sed -i 's/targetCompatibility JavaVersion\.VERSION_21/targetCompatibility JavaVersion.VERSION_17/g' "$f"
+            sed -i "s/sourceCompatibility = 21/sourceCompatibility = 17/g" "$f"
+            sed -i "s/targetCompatibility = 21/targetCompatibility = 17/g" "$f"
           done
-          find android -name "*.gradle" | xargs grep -l "sourceCompatibility" | while read f; do
-            sed -i 's/sourceCompatibility = JavaVersion.VERSION_[0-9]*/sourceCompatibility = JavaVersion.VERSION_17/g' "$f"
-            sed -i 's/targetCompatibility = JavaVersion.VERSION_[0-9]*/targetCompatibility = JavaVersion.VERSION_17/g' "$f"
-          done
+          echo "Post-sync patch complete"
 
-      - name: Enable R8 minification
+      - name: Force Java 17 on all subprojects
         script: |
-          sed -i 's/minifyEnabled false/minifyEnabled true/g' android/app/build.gradle || true
-          sed -i 's/shrinkResources false/shrinkResources true/g' android/app/build.gradle || true
+          cat >> android/build.gradle << 'EOF'
+
+          subprojects {
+              afterEvaluate { project ->
+                  if (project.hasProperty('android')) {
+                      project.android.compileOptions {
+                          sourceCompatibility = JavaVersion.VERSION_17
+                          targetCompatibility = JavaVersion.VERSION_17
+                      }
+                  }
+                  tasks.withType(JavaCompile).configureEach {
+                      options.release = 17
+                  }
+              }
+          }
+          EOF
+          echo "Injected Java 17 override into android/build.gradle"
+
+      - name: Configure Gradle properties
+        script: |
+          cat >> android/gradle.properties << 'EOF'
+          org.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=1g
+          org.gradle.daemon=false
+          org.gradle.parallel=false
+          EOF
+          sed -i 's/minifyEnabled true/minifyEnabled false/g' android/app/build.gradle || true
+          sed -i 's/shrinkResources true/shrinkResources false/g' android/app/build.gradle || true
+
+      - name: Verify Keystore
+        script: |
+          echo "Keystore path: $CM_KEYSTORE_PATH"
+          ls -la $CM_KEYSTORE_PATH
 
       - name: Sign and Build Android
         script: |
           cd android
-          ./gradlew build
-          ./gradlew bundleRelease \
+          ./gradlew assembleRelease \
+            --no-daemon \
+            --stacktrace \
             -Pandroid.injected.signing.store.file=$CM_KEYSTORE_PATH \
-            -Pandroid.injected.signing.store.password=$CM_KEYSTORE_PASSWORD \
-            -Pandroid.injected.signing.key.alias=$CM_KEY_ALIAS \
-            -Pandroid.injected.signing.key.password=$CM_KEY_PASSWORD
-          find app/build -name '*.so' | zip -j app/build/outputs/native-debug-symbols.zip -@ || true
+            -Pandroid.injected.signing.store.password="$CM_KEYSTORE_PASSWORD" \
+            -Pandroid.injected.signing.key.alias="$CM_KEY_ALIAS" \
+            -Pandroid.injected.signing.key.password="$CM_KEY_PASSWORD"
+          echo "=== Built APK files ==="
+          find app/build -name '*.apk' 2>/dev/null || echo "No APK found!"
 
     artifacts:
-      - android/app/build/outputs/**/*.aab
-      - android/app/build/outputs/**/*.apk
+      - android/app/build/outputs/apk/release/*.apk
+      - android/app/build/outputs/apk/**/*.apk
       - android/app/build/outputs/mapping/release/mapping.txt
-      - android/app/build/outputs/native-debug-symbols.zip
+
+    publishing:
+      email:
+        recipients:
+          - Donnalockett@ymail.com
+        notify:
+          success: true
+          failure: true
